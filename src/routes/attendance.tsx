@@ -64,9 +64,9 @@ function AttendancePage() {
 
   const addSubject = () => {
     const name = newSubject.trim();
-    if (!name) return toast.error("Give the subject a name first.");
+    if (!name) { toast.error("Give the subject a name first."); return; }
     const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    if (state.subjects.some((s) => s.id === id)) return toast.error("That subject already exists.");
+    if (state.subjects.some((s) => s.id === id)) { toast.error("That subject already exists."); return; }
     setState((prev) => ({
       ...prev,
       subjects: [...prev.subjects, { id, name, attended: 0, conducted: 0 }],
