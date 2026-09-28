@@ -46,7 +46,7 @@ export const toISO = (d: Date) => {
 
 export const parseISO = (s: string) => {
   const [y, m, d] = s.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
+  return new Date(y || new Date().getFullYear(), (m || 1) - 1, d || 1);
 };
 
 export const formatLong = (s: string) =>
