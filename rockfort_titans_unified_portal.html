@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rockfort Titans - Unified Attendance & Floor Manager</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        titan: {
+                            base: '#0B0F19',
+                            card: 'rgba(17, 25, 40, 0.65)',
+                            border: 'rgba(255, 255, 255, 0.125)',
+                            accent: '#6366f1',
+                            neon: '#06b6d4',
+                            emerald: '#10b981',
+                            rose: '#f43f5e',
+                            amber: '#f59e0b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Glassmorphism Essentials */
+        body {
+            background: radial-gradient(circle at 10% 20%, rgba(30, 27, 75, 0.9) 0%, rgba(15, 23, 42, 1) 40%, rgba(11, 15, 25, 1) 90%);
+            background-attachment: fixed;
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-panel-interactive {
+            background: rgba(17, 24, 39, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel-interactive:hover {
+            background: rgba(30, 41, 59, 0.65);
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -6px rgba(99, 102, 241, 0.25);
+        }
+
+        .glass-tab {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-tab.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .glow-accent {
+            box-shadow: 0 0 20px -3px rgba(99, 102, 241, 0.4);
+        }
+
+        .glow-neon {
+            box-shadow: 0 0 20px -3px rgba(6, 182, 212, 0.4);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* 2.5D Isometric Grid Effects */
+        .isometric-viewport {
+            perspective: 1000px;
+        }
+        .isometric-grid {
+            transform: rotateX(25deg) rotateZ(-5deg);
+            transition: transform 0.5s ease;
+        }
+        .isometric-grid:hover {
+            transform: rotateX(15deg) rotateZ(-2deg);
+        }
+
+        /* Ambient Glow Circles */
+        .ambient-glow-1 {
+            position: fixed;
+            top: -10%;
+            left: -10%;
+            width: 45vw;
+            height: 45vw;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, rgba(0,0,0,0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ambient-glow-2 {
+            position: fixed;
+            bottom: -10%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, rgba(0,0,0,0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-100 overflow-x-hidden">
+
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
+
+    <!-- MAIN WRAPPER -->
+    <div class="relative z-10 flex flex-col min-h-screen">
+
+        <!-- HEADER / DASHBOARD BAR -->
+        <header class="glass-panel sticky top-0 z-50 px-4 lg:px-8 py-3 my-2 mx-2 lg:mx-6 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+            <!-- Brand Badge -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-400 p-0.5 flex items-center justify-center glow-accent">
+                    <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid fa-shield-halved text-cyan-400 text-lg"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-extrabold text-xl tracking-wider bg-gradient-to-r from-white via-indigo-200 to-cyan-400 bg-clip-text text-transparent">
+                            ROCKFORT TITANS
+                        </span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">v3.0</span>
+                    </div>
+                    <p class="text-xs text-gray-400 hidden sm:block">Smart Attendance & AI Floor Intelligence Hub</p>
+                </div>
+            </div>
+
+            <!-- Live Status & Time -->
+            <div class="hidden md:flex items-center space-x-6 text-xs text-gray-300">
+                <div class="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-white/5">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span>10 Sections Live Sync</span>
+                </div>
+                <div class="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-white/5">
+                    <i class="fa-regular fa-clock text-cyan-400"></i>
+                    <span id="live-time-display">10:00 AM</span>
+                </div>
+            </div>
+
+            <!-- Glass Navigation Tabs -->
+            <nav class="flex items-center space-x-1 sm:space-x-2 overflow-x-auto max-w-full pb-1 sm:pb-0">
+                <button onclick="switchTab('attendance')" id="tab-attendance" class="glass-tab active text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 rounded-xl flex items-center space-x-2 whitespace-nowrap transition-all">
+                    <i class="fa-solid fa-chart-pie text-indigo-400"></i>
+                    <span>Attendance</span>
+                </button>
+                <button onclick="switchTab('floors')" id="tab-floors" class="glass-tab text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 rounded-xl flex items-center space-x-2 whitespace-nowrap transition-all">
+                    <i class="fa-solid fa-building-user text-cyan-400"></i>
+                    <span>Floor Grid</span>
+                </button>
+                <button onclick="switchTab('ai-finder')" id="tab-ai-finder" class="glass-tab text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 rounded-xl flex items-center space-x-2 whitespace-nowrap transition-all">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                    <span>AI Finder</span>
+                </button>
+                <button onclick="switchTab('squad-map')" id="tab-squad-map" class="glass-tab text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 rounded-xl flex items-center space-x-2 whitespace-nowrap transition-all">
+                    <i class="fa-solid fa-map-location-dot text-emerald-400"></i>
+                    <span>3D Map & Squad</span>
+                </button>
+            </nav>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-grow px-2 sm:px-4 lg:px-8 py-4 max-w-7xl w-full mx-auto">
+
+            <!-- ================= MODULE 1: ATTENDANCE PORTAL ================= -->
+            <section id="module-attendance" class="space-y-6">
+                <!-- Section Selector & Quick Stats Bar -->
+                <div class="glass-panel p-5 rounded-2xl flex flex-col lg:flex-row items-center justify-between gap-6">
+                    <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+                        <div>
+                            <label class="text-xs text-gray-400 font-medium uppercase tracking-wider block mb-1">Select Section</label>
+                            <select id="section-selector" onchange="changeSection()" class="bg-slate-900/80 text-white font-semibold border border-indigo-500/30 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-48 text-sm">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="text-center sm:text-left">
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <span id="student-name">Alex Mercer</span>
+                                <span id="student-roll" class="text-xs px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 font-mono">21CS104</span>
+                            </h2>
+                            <p class="text-xs text-gray-400" id="section-timetable-hint">Section 1 • Computer Science Dept</p>
+                        </div>
+                    </div>
+
+                    <!-- Top Attendance Metrics -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
+                        <div class="glass-panel-interactive p-3 rounded-xl text-center">
+                            <span class="text-xs text-gray-400 block mb-0.5">Overall</span>
+                            <span id="stat-overall-pct" class="text-xl font-extrabold text-emerald-400">84.2%</span>
+                        </div>
+                        <div class="glass-panel-interactive p-3 rounded-xl text-center">
+                            <span class="text-xs text-gray-400 block mb-0.5">Attended</span>
+                            <span id="stat-attended" class="text-xl font-extrabold text-indigo-300">112/133</span>
+                        </div>
+                        <div class="glass-panel-interactive p-3 rounded-xl text-center">
+                            <span class="text-xs text-gray-400 block mb-0.5">Safe Margin</span>
+                            <span id="stat-safe-margin" class="text-xl font-extrabold text-cyan-400">+6 classes</span>
+                        </div>
+                        <div class="glass-panel-interactive p-3 rounded-xl text-center">
+                            <span class="text-xs text-gray-400 block mb-0.5">Target</span>
+                            <span class="text-xl font-extrabold text-amber-400">75% Min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation & Calculator Strip -->
+                <div class="glass-panel p-5 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-slate-900/60 to-cyan-950/40">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg font-bold border border-amber-500/30">
+                                <i class="fa-solid fa-calculator"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-sm">Attendance Margin Simulator</h3>
+                                <p class="text-xs text-gray-400">Check how missing or attending future classes affects your eligibility threshold.</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <div class="flex items-center space-x-2 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-white/10 text-xs">
+                                <span>Target Margin:</span>
+                                <select id="sim-target" onchange="renderAttendanceCards()" class="bg-transparent font-bold text-indigo-400 focus:outline-none">
+                                    <option value="75">75% (Mandatory)</option>
+                                    <option value="80">80% (Safe Zone)</option>
+                                    <option value="85" selected>85% (Honors)</option>
+                                </select>
+                            </div>
+                            <button onclick="resetAttendanceData()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> Reset Section Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subject Attendance Glass Cards Grid -->
+                <div id="attendance-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Dynamic Cards Generated by JS -->
+                </div>
+            </section>
+
+
+            <!-- ================= MODULE 2: FLOOR MANAGER & GRID ================= -->
+            <section id="module-floors" class="space-y-6 hidden">
+                <!-- Filters Bar -->
+                <div class="glass-panel p-5 rounded-2xl space-y-4">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-cyan-400"></i>
+                                Live Floor Grid Inspector
+                            </h2>
+                            <p class="text-xs text-gray-400">Cross-referencing 10 class section schedules for real-time occupancy</p>
+                        </div>
+                        <!-- Time Slot Override Controls -->
+                        <div class="flex items-center space-x-2 bg-slate-900/80 px-3 py-2 rounded-xl border border-indigo-500/30 text-xs w-full md:w-auto">
+                            <i class="fa-regular fa-calendar-check text-indigo-400"></i>
+                            <span class="text-gray-400">Check Slot:</span>
+                            <select id="floor-time-slot" onchange="renderFloorGrid()" class="bg-transparent font-bold text-white focus:outline-none">
+                                <option value="current">Right Now (Live Clock)</option>
+                                <option value="08:30-09:30">08:30 AM - 09:30 AM</option>
+                                <option value="09:30-10:30">09:30 AM - 10:30 AM</option>
+                                <option value="10:30-11:30">10:30 AM - 11:30 AM</option>
+                                <option value="11:30-12:30">11:30 AM - 12:30 PM</option>
+                                <option value="13:30-14:30">01:30 PM - 02:30 PM</option>
+                                <option value="14:30-15:30">02:30 PM - 03:30 PM</option>
+                                <option value="15:30-16:30">03:30 PM - 04:30 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-white/10">
+                        <div>
+                            <label class="text-[11px] text-gray-400 block mb-1">Floor Level</label>
+                            <select id="filter-floor" onchange="renderFloorGrid()" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-cyan-400">
+                                <option value="all">All Floors (Ground - 3rd)</option>
+                                <option value="0">Ground Floor (IST 101-110)</option>
+                                <option value="1">1st Floor (IST 201-210)</option>
+                                <option value="2">2nd Floor (IST 301-310)</option>
+                                <option value="3">3rd Floor (IST 501-510)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-gray-400 block mb-1">Room Category</label>
+                            <select id="filter-type" onchange="renderFloorGrid()" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-cyan-400">
+                                <option value="all">All Room Types</option>
+                                <option value="Classroom">Classroom</option>
+                                <option value="Lab">Computer / Tech Lab</option>
+                                <option value="Seminar">Seminar Hall</option>
+                                <option value="Team">Team Collaboration</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-gray-400 block mb-1">Amenities</label>
+                            <select id="filter-ac" onchange="renderFloorGrid()" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-cyan-400">
+                                <option value="all">Any AC / Non-AC</option>
+                                <option value="ac">AC Rooms Only</option>
+                                <option value="non-ac">Non-AC Rooms Only</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-gray-400 block mb-1">Availability Status</label>
+                            <select id="filter-status" onchange="renderFloorGrid()" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-cyan-400">
+                                <option value="all">All Statuses</option>
+                                <option value="free">Available / Free Now</option>
+                                <option value="occupied">Occupied</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Room Grid Container -->
+                <div id="floor-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+
+            <!-- ================= MODULE 3: AI ROOM FINDER ================= -->
+            <section id="module-ai-finder" class="space-y-6 hidden">
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl relative overflow-hidden">
+                    <div class="max-w-2xl mx-auto text-center space-y-4">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+                            <i class="fa-solid fa-microchip"></i>
+                            <span>Titan AI Natural Language Finder</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Find a Room using Plain English</h2>
+                        <p class="text-sm text-gray-300">Type what you need, such as floor, duration, capacity, or AC preference. The AI engine cross-references all 10 section timetables instantly.</p>
+
+                        <!-- Search Bar Input -->
+                        <div class="relative mt-6">
+                            <input type="text" id="ai-input-query" placeholder="e.g. Need an AC room on 2nd floor for 6 people for 2 hours" 
+                                class="w-full bg-slate-900/90 text-white placeholder-gray-500 text-sm sm:text-base rounded-2xl pl-12 pr-32 py-4 border border-indigo-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-2xl">
+                            <i class="fa-solid fa-sparkles text-amber-400 absolute left-4 top-1/2 -translate-y-1/2 text-lg"></i>
+                            <button onclick="executeAISearch()" class="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 text-white font-bold text-xs sm:text-sm hover:opacity-90 transition glow-accent">
+                                Search
+                            </button>
+                        </div>
+
+                        <!-- Sample Prompt Chips -->
+                        <div class="pt-2 flex flex-wrap items-center justify-center gap-2">
+                            <span class="text-xs text-gray-400">Quick prompts:</span>
+                            <button onclick="setPromptAndSearch('I need an AC room on ground floor for 4 people')" class="text-xs px-3 py-1.5 rounded-xl glass-panel-interactive text-cyan-300 hover:text-white transition">
+                                ❄️ Ground floor AC for 4
+                            </button>
+                            <button onclick="setPromptAndSearch('Quiet computer lab with high capacity')" class="text-xs px-3 py-1.5 rounded-xl glass-panel-interactive text-indigo-300 hover:text-white transition">
+                                💻 Computer Lab
+                            </button>
+                            <button onclick="setPromptAndSearch('Free room on 3rd floor right now')" class="text-xs px-3 py-1.5 rounded-xl glass-panel-interactive text-emerald-300 hover:text-white transition">
+                                🚀 Free on 3rd Floor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Extraction & Match Results -->
+                <div id="ai-results-wrapper" class="space-y-4 hidden">
+                    <!-- Extracted Tags -->
+                    <div class="glass-panel p-4 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center space-x-2 text-gray-300">
+                            <i class="fa-solid fa-filter text-amber-400"></i>
+                            <span class="font-semibold">Parsed AI Criteria:</span>
+                        </div>
+                        <div id="ai-parsed-tags" class="flex flex-wrap gap-2">
+                            <!-- Dynamic Chips -->
+                        </div>
+                    </div>
+
+                    <!-- Match Results Cards -->
+                    <div id="ai-results-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ================= MODULE 4: 3D MAP & SQUAD SHARE ================= -->
+            <section id="module-squad-map" class="space-y-6 hidden">
+                <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-cube text-emerald-400"></i>
+                            Interactive 2.5D Campus Floor Layout
+                        </h2>
+                        <p class="text-xs text-gray-400">Click any room block to inspect specifications, view live countdown, or call your squad.</p>
+                    </div>
+
+                    <!-- Floor Selector Switcher -->
+                    <div class="flex items-center bg-slate-900/80 p-1 rounded-xl border border-white/10">
+                        <button onclick="setMapFloor(0)" id="map-fl-0" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 transition">Ground</button>
+                        <button onclick="setMapFloor(1)" id="map-fl-1" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition">1st Fl</button>
+                        <button onclick="setMapFloor(2)" id="map-fl-2" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition">2nd Fl</button>
+                        <button onclick="setMapFloor(3)" id="map-fl-3" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition">3rd Fl</button>
+                    </div>
+                </div>
+
+                <!-- Interactive Isometric Canvas Area -->
+                <div class="glass-panel p-6 rounded-3xl min-h-[420px] flex flex-col justify-center items-center relative overflow-hidden">
+                    <div class="isometric-viewport w-full max-w-4xl py-6">
+                        <div id="3d-floor-grid" class="isometric-grid grid grid-cols-5 gap-3 sm:gap-4 p-4 bg-slate-950/60 rounded-3xl border border-indigo-500/20 shadow-2xl">
+                            <!-- Dynamically generated room isometric blocks -->
+                        </div>
+                    </div>
+
+                    <!-- Map Legend -->
+                    <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded bg-emerald-500 shadow-sm shadow-emerald-500"></div>
+                            <span class="text-gray-300">Free / Available</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded bg-rose-500 shadow-sm shadow-rose-500"></div>
+                            <span class="text-gray-300">Occupied (Class in progress)</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded bg-amber-500 shadow-sm shadow-amber-500"></div>
+                            <span class="text-gray-300">Reserved by Student</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="glass-panel mt-12 py-4 px-6 text-center text-xs text-gray-400 border-t border-white/5">
+            <p>© 2026 Rockfort Titans Unified Portal • Developed for Seamless Student & Floor Experience</p>
+        </footer>
+    </div>
+
+
+    <!-- ================= ROOM INSPECTOR & SQUAD SHARE MODAL ================= -->
+    <div id="room-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-lg rounded-3xl border border-indigo-500/30 p-6 space-y-5 relative shadow-2xl animate-fade-in">
+            <!-- Close Button -->
+            <button onclick="closeRoomModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="flex items-start space-x-4">
+                <div id="modal-room-icon" class="w-12 h-12 rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-door-open"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h3 id="modal-room-id" class="text-xl font-extrabold text-white">IST 204</h3>
+                        <span id="modal-room-status-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Free Now</span>
+                    </div>
+                    <p id="modal-room-subtitle" class="text-xs text-gray-400">1st Floor • Computer Science Wing</p>
+                </div>
+            </div>
+
+            <!-- Specs Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                <div class="bg-slate-900/60 p-2.5 rounded-xl border border-white/5">
+                    <span class="text-gray-400 block mb-0.5">Capacity</span>
+                    <span id="modal-spec-capacity" class="font-bold text-white">60 Seats</span>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-xl border border-white/5">
+                    <span class="text-gray-400 block mb-0.5">AC Status</span>
+                    <span id="modal-spec-ac" class="font-bold text-cyan-400">Air Conditioned</span>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-xl border border-white/5">
+                    <span class="text-gray-400 block mb-0.5">Type</span>
+                    <span id="modal-spec-type" class="font-bold text-indigo-300">Lab</span>
+                </div>
+            </div>
+
+            <!-- Live Schedule / Countdown -->
+            <div class="glass-panel p-4 rounded-2xl space-y-2 bg-gradient-to-r from-indigo-950/30 to-slate-900/40">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-gray-300 font-medium">Time Slot Schedule:</span>
+                    <span id="modal-slot-time" class="font-bold text-amber-400">10:30 AM - 11:30 AM</span>
+                </div>
+                <div id="modal-occupant-info" class="text-xs text-gray-400">
+                    Occupied by: <span class="text-white font-semibold">Section 4 (DBMS Lab)</span>
+                </div>
+                <!-- Countdown timer box -->
+                <div class="flex items-center justify-between pt-1 border-t border-white/10 text-xs">
+                    <span class="text-gray-400">Next status change in:</span>
+                    <span id="modal-countdown" class="font-mono font-extrabold text-cyan-300">28m 14s</span>
+                </div>
+            </div>
+
+            <!-- Actions: Claim Room & Squad Share -->
+            <div class="space-y-2 pt-2">
+                <button id="btn-claim-room" onclick="claimSelectedRoom()" class="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-600 to-cyan-500 hover:opacity-95 text-white shadow-lg transition glow-accent flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-bookmark"></i>
+                    <span>Claim / Reserve Spot</span>
+                </button>
+
+                <a id="btn-squad-whatsapp" href="#" target="_blank" class="w-full py-3 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center justify-center space-x-2">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                    <span>Call the Squad (Share on WhatsApp)</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        /* =========================================================================
+           DATASET INITIALIZATION (10 SECTIONS & 40 ROOMS IST 101-510)
+           ========================================================================= */
+        const SECTIONS = Array.from({length: 10}, (_, i) => `Section ${i + 1}`);
+
+        // Sample Subjects per Section
+        const SUBJECTS = [
+            { code: "CS301", name: "Data Structures & Algo", professor: "Dr. Aris" },
+            { code: "CS302", name: "Database Systems", professor: "Prof. K. Sharma" },
+            { code: "CS303", name: "Computer Networks", professor: "Dr. Vance" },
+            { code: "CS304", name: "Operating Systems", professor: "Prof. Meera" },
+            { code: "CS305", name: "AI & Machine Learning", professor: "Dr. Rockfort" }
+        ];
+
+        // Seeded Attendance State for all 10 Sections
+        let attendanceState = {};
+        SECTIONS.forEach((sec, idx) => {
+            attendanceState[sec] = {
+                studentName: `Titan Student ${idx + 1}`,
+                rollNo: `21CS10${idx + 1}`,
+                subjects: SUBJECTS.map(s => {
+                    const total = 25 + (idx * 2);
+                    const attended = Math.floor(total * (0.70 + (Math.random() * 0.22)));
+                    return { ...s, total, attended };
+                })
+            };
+        });
+
+        // 40 Rooms across Ground (0), 1st (1), 2nd (2), and 3rd (3) floors
+        const ROOMS = [];
+        const floorPrefixes = [{ floor: 0, prefix: 1 }, { floor: 1, prefix: 2 }, { floor: 2, prefix: 3 }, { floor: 3, prefix: 5 }];
+
+        floorPrefixes.forEach(fObj => {
+            for(let i = 1; i <= 10; i++) {
+                const roomNum = i < 10 ? `0${i}` : `${i}`;
+                const id = `IST ${fObj.prefix}${roomNum}`;
+                const isLab = i % 3 === 0;
+                const isSeminar = i === 10;
+                const type = isLab ? 'Lab' : (isSeminar ? 'Seminar' : (i % 2 === 0 ? 'Team' : 'Classroom'));
+                ROOMS.push({
+                    id,
+                    floor: fObj.floor,
+                    type,
+                    capacity: isSeminar ? 120 : (isLab ? 45 : 60),
+                    isAC: i % 2 === 0 || isSeminar || isLab,
+                    reservedBy: null
+                });
+            }
+        });
+
+        // Timetable matrix: Assigning Section occupancy for slots
+        const TIME_SLOTS = [
+            "08:30-09:30", "09:30-10:30", "10:30-11:30", 
+            "11:30-12:30", "13:30-14:30", "14:30-15:30", "15:30-16:30"
+        ];
+
+        // Deterministic occupancy schedule generator
+        function getRoomOccupant(roomId, slot) {
+            const hash = (roomId.length + roomId.charCodeAt(4) + slot.length) % 10;
+            const isOccupied = (roomId.charCodeAt(5) + TIME_SLOTS.indexOf(slot)) % 2 === 0;
+            if (isOccupied) {
+                return SECTIONS[hash];
+            }
+            return null; // Free
+        }
+
+        /* =========================================================================
+           GLOBAL STATE & UTILS
+           ========================================================================= */
+        let currentTab = 'attendance';
+        let currentSection = 'Section 1';
+        let currentMapFloor = 0;
+        let selectedRoomForModal = null;
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            populateSectionSelector();
+            renderAttendanceCards();
+            renderFloorGrid();
+            render3DMap();
+            startLiveClock();
+        });
+
+        function startLiveClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('live-time-display').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }, 1000);
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            ['attendance', 'floors', 'ai-finder', 'squad-map'].forEach(id => {
+                const mod = document.getElementById(`module-${id}`);
+                const tab = document.getElementById(`tab-${id}`);
+                if (id === tabId) {
+                    mod.classList.remove('hidden');
+                    tab.classList.add('active');
+                } else {
+                    mod.classList.add('hidden');
+                    tab.classList.remove('active');
+                }
+            });
+        }
+
+        /* =========================================================================
+           MODULE 1: ATTENDANCE LOGIC
+           ========================================================================= */
+        function populateSectionSelector() {
+            const sel = document.getElementById('section-selector');
+            sel.innerHTML = SECTIONS.map(s => `<option value="${s}">${s}</option>`).join('');
+            sel.value = currentSection;
+        }
+
+        function changeSection() {
+            currentSection = document.getElementById('section-selector').value;
+            renderAttendanceCards();
+        }
+
+        function renderAttendanceCards() {
+            const data = attendanceState[currentSection];
+            document.getElementById('student-name').innerText = data.studentName;
+            document.getElementById('student-roll').innerText = data.rollNo;
+            document.getElementById('section-timetable-hint').innerText = `${currentSection} • Computer Science Dept`;
+
+            const targetPct = parseFloat(document.getElementById('sim-target').value);
+            const container = document.getElementById('attendance-cards-container');
+            container.innerHTML = '';
+
+            let grandTotal = 0;
+            let grandAttended = 0;
+
+            data.subjects.forEach((sub, index) => {
+                grandTotal += sub.total;
+                grandAttended += sub.attended;
+                const pct = sub.total > 0 ? ((sub.attended / sub.total) * 100).toFixed(1) : 0;
+                
+                // Margin calculation
+                // Formula: Attended / (Total + X) = Target% => X classes needed OR how many can be missed
+                let marginText = "";
+                let marginClass = "";
+
+                if (pct >= targetPct) {
+                    // Safe to miss
+                    const maxBunk = Math.floor((sub.attended - (targetPct/100 * sub.total)) / (targetPct/100));
+                    marginText = `Can miss ${Math.max(0, maxBunk)} next classes`;
+                    marginClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                } else {
+                    // Need to attend
+                    const needed = Math.ceil(((targetPct/100 * sub.total) - sub.attended) / (1 - (targetPct/100)));
+                    marginText = `Must attend ${needed} consecutive classes`;
+                    marginClass = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+                }
+
+                const cardHtml = `
+                    <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between space-y-4 border border-white/10 hover:border-indigo-500/40 transition">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">${sub.code}</span>
+                                <h4 class="font-bold text-base text-white mt-1">${sub.name}</h4>
+                                <p class="text-xs text-gray-400">${sub.professor}</p>
+                            </div>
+                            <!-- Circular Progress Indicator -->
+                            <div class="relative w-14 h-14 flex items-center justify-center">
+                                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                    <path class="text-slate-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path class="${pct >= 75 ? 'text-emerald-400' : 'text-rose-500'}" stroke-dasharray="${pct}, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <span class="absolute text-xs font-extrabold text-white">${pct}%</span>
+                            </div>
+                        </div>
+
+                        <!-- Class Counter Numbers -->
+                        <div class="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-slate-900/60 border border-white/5">
+                            <span class="text-gray-400">Classes: <strong class="text-white">${sub.attended} / ${sub.total}</strong></span>
+                            <span class="px-2 py-0.5 rounded-md border text-[11px] ${marginClass}">${marginText}</span>
+                        </div>
+
+                        <!-- Quick Action Controls -->
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button onclick="updateAttendance('${currentSection}', ${index}, 1)" class="py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-semibold text-xs transition flex items-center justify-center space-x-1">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span>Attended (+1)</span>
+                            </button>
+                            <button onclick="updateAttendance('${currentSection}', ${index}, 0)" class="py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 font-semibold text-xs transition flex items-center justify-center space-x-1">
+                                <i class="fa-solid fa-minus text-[10px]"></i>
+                                <span>Missed (+1)</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+
+            // Update Header Stats
+            const overallPct = grandTotal > 0 ? ((grandAttended / grandTotal) * 100).toFixed(1) : 0;
+            document.getElementById('stat-overall-pct').innerText = `${overallPct}%`;
+            document.getElementById('stat-attended').innerText = `${grandAttended}/${grandTotal}`;
+
+            // Overall Safe Margin
+            const overallSafe = Math.floor((grandAttended - (targetPct/100 * grandTotal)) / (targetPct/100));
+            document.getElementById('stat-safe-margin').innerText = overallSafe >= 0 ? `+${overallSafe} classes` : `${overallSafe} classes`;
+        }
+
+        function updateAttendance(sec, subIdx, type) {
+            const sub = attendanceState[sec].subjects[subIdx];
+            sub.total += 1;
+            if (type === 1) sub.attended += 1;
+            renderAttendanceCards();
+        }
+
+        function resetAttendanceData() {
+            attendanceState[currentSection].subjects.forEach(sub => {
+                sub.total = 30;
+                sub.attended = 25;
+            });
+            renderAttendanceCards();
+        }
+
+
+        /* =========================================================================
+           MODULE 2: FLOOR GRID INSPECTOR
+           ========================================================================= */
+        function getCurrentOrSelectedSlot() {
+            const sel = document.getElementById('floor-time-slot').value;
+            if (sel !== 'current') return sel;
+            return "10:30-11:30"; // Fallback demo current slot
+        }
+
+        function renderFloorGrid() {
+            const slot = getCurrentOrSelectedSlot();
+            const flFilter = document.getElementById('filter-floor').value;
+            const typeFilter = document.getElementById('filter-type').value;
+            const acFilter = document.getElementById('filter-ac').value;
+            const statusFilter = document.getElementById('filter-status').value;
+
+            const grid = document.getElementById('floor-grid-container');
+            grid.innerHTML = '';
+
+            ROOMS.forEach(room => {
+                // Apply Filters
+                if (flFilter !== 'all' && room.floor !== parseInt(flFilter)) return;
+                if (typeFilter !== 'all' && room.type !== typeFilter) return;
+                if (acFilter === 'ac' && !room.isAC) return;
+                if (acFilter === 'non-ac' && room.isAC) return;
+
+                const occupant = room.reservedBy ? `Reserved by ${room.reservedBy}` : getRoomOccupant(room.id, slot);
+                const isOccupied = occupant !== null;
+
+                if (statusFilter === 'free' && isOccupied) return;
+                if (statusFilter === 'occupied' && !isOccupied) return;
+
+                const floorLabel = room.floor === 0 ? 'Ground' : `${room.floor}rd Floor`;
+
+                const cardHtml = `
+                    <div onclick="openRoomModal('${room.id}')" class="glass-panel-interactive p-4 rounded-2xl cursor-pointer flex flex-col justify-between space-y-3 relative overflow-hidden">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-lg ${isOccupied ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'} flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid ${room.type === 'Lab' ? 'fa-flask' : 'fa-chalkboard'}"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">${room.id}</h4>
+                                    <span class="text-[10px] text-gray-400">${floorLabel}</span>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isOccupied ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+                                ${isOccupied ? 'Occupied' : 'Free Now'}
+                            </span>
+                        </div>
+
+                        <div class="text-xs space-y-1">
+                            <p class="text-gray-300 flex items-center justify-between">
+                                <span>Status:</span>
+                                <strong class="${isOccupied ? 'text-rose-300' : 'text-emerald-300'}">${isOccupied ? occupant : 'Available'}</strong>
+                            </p>
+                            <p class="text-gray-400 flex items-center justify-between text-[11px]">
+                                <span>Specs:</span>
+                                <span>${room.capacity} seats • ${room.isAC ? 'AC ❄️' : 'Non-AC'}</span>
+                            </p>
+                        </div>
+
+                        <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-indigo-300">
+                            <span>Inspect Specs & Squad</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += cardHtml;
+            });
+        }
+
+
+        /* =========================================================================
+           MODULE 3: AI NATURAL LANGUAGE FINDER
+           ========================================================================= */
+        function setPromptAndSearch(prompt) {
+            document.getElementById('ai-input-query').value = prompt;
+            executeAISearch();
+        }
+
+        function executeAISearch() {
+            const query = document.getElementById('ai-input-query').value.toLowerCase();
+            if (!query.trim()) return;
+
+            // Simple NLP Intent Extraction Logic
+            const parsed = {
+                ac: query.includes('ac') || query.includes('cool') || query.includes('air'),
+                floor: query.includes('ground') ? 0 : (query.includes('1st') ? 1 : (query.includes('2nd') ? 2 : (query.includes('3rd') ? 3 : null))),
+                lab: query.includes('lab') || query.includes('computer'),
+                capacity: query.match(/\d+/)?.[0] ? parseInt(query.match(/\d+/)[0]) : 30
+            };
+
+            // Render Extracted Tags
+            const tagsBox = document.getElementById('ai-parsed-tags');
+            tagsBox.innerHTML = `
+                <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Target Floor: ${parsed.floor !== null ? parsed.floor : 'Any'}</span>
+                <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">AC Required: ${parsed.ac ? 'Yes' : 'Any'}</span>
+                <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Capacity: ${parsed.capacity}+ seats</span>
+            `;
+
+            // Filter and rank rooms
+            const slot = getCurrentOrSelectedSlot();
+            const results = [];
+
+            ROOMS.forEach(room => {
+                const occupant = room.reservedBy ? `Reserved` : getRoomOccupant(room.id, slot);
+                if (occupant !== null) return; // Only free rooms
+
+                let score = 50;
+                if (parsed.ac && room.isAC) score += 25;
+                if (parsed.floor !== null && room.floor === parsed.floor) score += 25;
+                if (parsed.lab && room.type === 'Lab') score += 20;
+                if (room.capacity >= parsed.capacity) score += 10;
+
+                results.push({ room, score });
+            });
+
+            results.sort((a, b) => b.score - a.score);
+
+            const grid = document.getElementById('ai-results-grid');
+            grid.innerHTML = '';
+
+            results.slice(0, 6).forEach(res => {
+                const r = res.room;
+                grid.innerHTML += `
+                    <div onclick="openRoomModal('${r.id}')" class="glass-panel-interactive p-4 rounded-2xl cursor-pointer space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-white">${r.id}</h4>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-gradient-to-r from-amber-500/20 to-indigo-500/20 text-amber-300 border border-amber-500/30">
+                                ${res.score}% Match
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-300">${r.floor === 0 ? 'Ground' : r.floor + 'th'} Floor • ${r.type} • ${r.capacity} Seats</p>
+                        <div class="text-[11px] text-cyan-300 font-semibold flex items-center space-x-1">
+                            <i class="fa-solid fa-sparkles"></i>
+                            <span>Instant Recommendation</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('ai-results-wrapper').classList.remove('hidden');
+        }
+
+
+        /* =========================================================================
+           MODULE 4: 3D MAP & SQUAD SHARE
+           ========================================================================= */
+        function setMapFloor(fl) {
+            currentMapFloor = fl;
+            for(let i=0; i<=3; i++) {
+                const btn = document.getElementById(`map-fl-${i}`);
+                if (i === fl) {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 transition";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition";
+                }
+            }
+            render3DMap();
+        }
+
+        function render3DMap() {
+            const grid = document.getElementById('3d-floor-grid');
+            grid.innerHTML = '';
+            const slot = getCurrentOrSelectedSlot();
+
+            const floorRooms = ROOMS.filter(r => r.floor === currentMapFloor);
+
+            floorRooms.forEach(room => {
+                const occupant = room.reservedBy ? `Reserved` : getRoomOccupant(room.id, slot);
+                const isOccupied = occupant !== null;
+                const isReserved = room.reservedBy !== null;
+
+                let colorClass = "bg-emerald-500/30 border-emerald-400/50 hover:bg-emerald-500/50 text-emerald-200";
+                if (isReserved) {
+                    colorClass = "bg-amber-500/30 border-amber-400/50 hover:bg-amber-500/50 text-amber-200";
+                } else if (isOccupied) {
+                    colorClass = "bg-rose-500/30 border-rose-400/50 hover:bg-rose-500/50 text-rose-200";
+                }
+
+                grid.innerHTML += `
+                    <div onclick="openRoomModal('${room.id}')" class="h-20 sm:h-24 rounded-2xl border p-2 flex flex-col justify-between cursor-pointer transition transform hover:-translate-y-2 hover:scale-105 shadow-xl ${colorClass}">
+                        <div class="flex items-center justify-between text-[11px] font-bold">
+                            <span>${room.id.replace('IST ', '')}</span>
+                            <i class="fa-solid ${room.isAC ? 'fa-snowflake' : 'fa-wind'} text-[9px]"></i>
+                        </div>
+                        <div class="text-[10px] text-center font-medium truncate">
+                            ${isOccupied ? occupant : 'FREE'}
+                        </div>
+                        <div class="text-[9px] text-right opacity-80">${room.capacity}s</div>
+                    </div>
+                `;
+            });
+        }
+
+
+        /* =========================================================================
+           ROOM INSPECTOR MODAL & WHATSAPP SQUAD LINK GENERATOR
+           ========================================================================= */
+        function openRoomModal(roomId) {
+            selectedRoomForModal = ROOMS.find(r => r.id === roomId);
+            const r = selectedRoomForModal;
+            const slot = getCurrentOrSelectedSlot();
+            const occupant = r.reservedBy ? `Reserved by ${r.reservedBy}` : getRoomOccupant(r.id, slot);
+            const isOccupied = occupant !== null;
+
+            document.getElementById('modal-room-id').innerText = r.id;
+            document.getElementById('modal-room-subtitle').innerText = `${r.floor === 0 ? 'Ground' : r.floor + 'th'} Floor • ${r.type}`;
+            document.getElementById('modal-spec-capacity').innerText = `${r.capacity} Seats`;
+            document.getElementById('modal-spec-ac').innerText = r.isAC ? 'Air Conditioned' : 'Non-AC';
+            document.getElementById('modal-spec-type').innerText = r.type;
+            document.getElementById('modal-slot-time').innerText = slot;
+            document.getElementById('modal-occupant-info').innerHTML = `Status: <strong class="${isOccupied ? 'text-rose-400' : 'text-emerald-400'}">${isOccupied ? occupant : 'Free / Available'}</strong>`;
+
+            const statusBadge = document.getElementById('modal-room-status-badge');
+            if (isOccupied) {
+                statusBadge.innerText = 'Occupied';
+                statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
+            } else {
+                statusBadge.innerText = 'Free Now';
+                statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+            }
+
+            // WhatsApp Squad Share Link Setup
+            const message = encodeURIComponent(`📍 Rockfort Titans Alert!\nHeading to ${r.id} (${r.floor === 0 ? 'Ground' : r.floor + 'th'} Floor).\nStatus: ${isOccupied ? 'Occupied' : 'FREE NOW'}.\nCome join the squad!`);
+            document.getElementById('btn-squad-whatsapp').href = `https://api.whatsapp.com/send?text=${message}`;
+
+            document.getElementById('room-modal').classList.remove('hidden');
+        }
+
+        function closeRoomModal() {
+            document.getElementById('room-modal').classList.add('hidden');
+        }
+
+        function claimSelectedRoom() {
+            if (!selectedRoomForModal) return;
+            selectedRoomForModal.reservedBy = attendanceState[currentSection].studentName;
+            alert(`✅ Room ${selectedRoomForModal.id} successfully reserved for ${attendanceState[currentSection].studentName}!`);
+            closeRoomModal();
+            renderFloorGrid();
+            render3DMap();
+        }
+    </script>
+</body>
+</html>
