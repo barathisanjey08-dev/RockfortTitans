@@ -10,14 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SimulatorRouteImport } from './routes/simulator'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AttendanceRoute = AttendanceRouteImport.update({
@@ -28,6 +35,11 @@ const AttendanceRoute = AttendanceRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SimulatorRoute = SimulatorRouteImport.update({
@@ -43,44 +55,68 @@ const ApiAdvisorRoute = ApiAdvisorRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
+  '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
   '/api/advisor': typeof ApiAdvisorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
+  '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
   '/api/advisor': typeof ApiAdvisorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
+  '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
   '/api/advisor': typeof ApiAdvisorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/attendance' | '/dashboard' | '/simulator' | '/api/advisor'
+  fullPaths:
+    | '/'
+    | '/analytics'
+    | '/attendance'
+    | '/dashboard'
+    | '/settings'
+    | '/simulator'
+    | '/api/advisor'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/attendance' | '/dashboard' | '/simulator' | '/api/advisor'
+  to:
+    | '/'
+    | '/analytics'
+    | '/attendance'
+    | '/dashboard'
+    | '/settings'
+    | '/simulator'
+    | '/api/advisor'
   id:
     | '__root__'
     | '/'
+    | '/analytics'
     | '/attendance'
     | '/dashboard'
+    | '/settings'
     | '/simulator'
     | '/api/advisor'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalyticsRoute: typeof AnalyticsRoute
   AttendanceRoute: typeof AttendanceRoute
   DashboardRoute: typeof DashboardRoute
+  SettingsRoute: typeof SettingsRoute
   SimulatorRoute: typeof SimulatorRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
 }
@@ -92,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/attendance': {
@@ -106,6 +149,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/simulator': {
@@ -127,8 +177,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalyticsRoute: AnalyticsRoute,
   AttendanceRoute: AttendanceRoute,
   DashboardRoute: DashboardRoute,
+  SettingsRoute: SettingsRoute,
   SimulatorRoute: SimulatorRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
 }
